@@ -18,12 +18,12 @@ def process_combination(s0, b0, omega_g, zeta_g, time, freq):
     df_results['time'] = time
     df_results.to_csv(f'data/realizations/stochastic_process_{s0}_{b0}_{omega_g}_{zeta_g}_freq_cp_{max(freq)/2}_freq_kt_{omega_g}.csv', index=False)
 
-time = np.linspace(0, 40, 512)
-freq = np.linspace(0, 50, 10)
-S0 = np.linspace(0.1, 1, 10)
-b0 = np.linspace(0.15, 0.55, 5)
-omega_g = np.linspace(10, 45, 5)
-zeta_g = np.linspace(0.1, 0.5, 5)
+time = np.linspace(0, 40, 1024)
+freq = np.linspace(0, 50, 2)
+S0 = np.linspace(0.5, 2, 4)
+b0 = np.linspace(0.15, 0.55, 4)
+omega_g = np.linspace(10, 45, 4)
+zeta_g = np.linspace(0.1, 0.5, 4)
 
 # Create all combinations of parameters
 combinations = [(_S0, _b0, _omega_g, _zeta_g) 
