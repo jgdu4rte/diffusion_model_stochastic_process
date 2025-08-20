@@ -1,10 +1,10 @@
 import numpy as np
 
-def cp_evolutionary_power_spectrum(freq: float, t: float, S0: float, b0: float):
+def nonseparable_evolutionary_power_spectrum(freq: float, t: float, S0: float, b0: float):
     """
-    Clough–Penzien evolutionary power spectrum.
+    Nonseparable evolutionary power spectrum.
 
-    This function implements the time-modulated Clough–Penzien type 
+    This function implements the time-modulated type 
     evolutionary power spectrum model, where the stationary spectrum 
     is shaped by two frequency-dependent filters and modulated in time 
     by an exponential-decay envelope.
@@ -23,7 +23,7 @@ def cp_evolutionary_power_spectrum(freq: float, t: float, S0: float, b0: float):
     Returns
     -------
     Sw : ndarray
-        Evolutionary Clough–Penzien power spectrum values, with the same 
+        Nonseparable evolutionary power spectrum values, with the same 
         broadcasted shape as the inputs.
 
     Notes
