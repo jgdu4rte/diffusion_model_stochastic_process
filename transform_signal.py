@@ -56,10 +56,15 @@ def process_column(df: pd.DataFrame, col_name: str, file_name: str):
 
     freq_centers = np.array([(b[0]+b[1])/2 for b in bands], dtype='float32')
 
-    # Store complex coefficients
-    df_result = pd.concat([pd.Series(c, name=f'coeff_{i}', dtype='complex64') for i, c in enumerate(coeffs)], axis=1)
-    # Add freq_centers as float32
-    df_result['freq_centers'] = pd.Series(freq_centers, dtype='float32')
+    # Create DataFrame with timesteps as columns and frequency bands as rows
+    df_result = pd.DataFrame(
+        data=np.array(coeffs),  # coeffs is list of arrays, each array is a band
+        index=[f'band_{i}' for i in range(len(coeffs))],
+        columns=[f'time_{i}' for i in range(len(coeffs[0]))],
+        dtype='complex64'
+    )
+    # Add freq_centers as the last column
+    df_result['freq_centers'] = pd.Series(freq_centers, index=df_result.index, dtype='float32')
 
     # Save results
     output_file = f'data/transformations/{file_name}_{col_name}.pkl'

@@ -3,7 +3,7 @@ import numpy as np
 from eps.nonsep import nonseparable_evolutionary_power_spectrum
 from eps.kt import kt_evolutionary_power_spectrum
 
-def simulate_process(time, S0, frequency_max, omega_g: float, zeta_g: float, b0=0.2, m=800, random_state=None, eps_type='nonsep'):
+def simulate_process(time, S0, frequency_max, omega_g: float, zeta_g: float, b0=0.2, m=1024, random_state=None, eps_type='nonsep'):
     """
     Simulate nonstationary base excitation process (ndof=1).
 
@@ -18,7 +18,7 @@ def simulate_process(time, S0, frequency_max, omega_g: float, zeta_g: float, b0=
     b0 : float, optional
         Decay constant for EPS (default 0.2).
     m : int, optional
-        Number of frequency steps for discretization (default 800).
+        Number of frequency steps for discretization (default 1024).
     random_state : int or None
         Random seed for reproducibility.
 
