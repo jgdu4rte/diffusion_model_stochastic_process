@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import os
 from joblib import Parallel, delayed
 from tqdm import tqdm
 from simulate_process import simulate_process
@@ -24,6 +25,9 @@ S0 = np.linspace(0.5, 1, 2)
 b0 = np.linspace(0.25, 0.55, 5)
 omega_g = np.linspace(20, 45, 5)
 zeta_g = np.linspace(0.1, 0.25, 5)
+
+if not os.path.exists('data/realizations'):
+    os.makedirs('data/realizations', exist_ok=True)
 
 # Create all combinations of parameters
 combinations = [(_S0, _b0, _omega_g, _zeta_g) 

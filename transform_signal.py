@@ -86,6 +86,9 @@ files_list = get_files_in_directory('data/realizations/', num_files=222)
 
 print(f'{len(files_list)} files to process...')
 
+if not os.path.exists('data/transformations'):
+    os.makedirs('data/transformations', exist_ok=True)
+
 # Run in parallel
 with tqdm_joblib(tqdm(total=len(files_list), desc="Files processed")):
     Parallel(n_jobs=-1)(delayed(process_file)(f) for f in files_list)
