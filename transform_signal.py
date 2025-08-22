@@ -7,15 +7,15 @@ from wavelet.get_band_options import ghw_band_options
 from wavelet.ghw_transform import ghw_transform
 from tqdm import tqdm
 
-def add_noise(x, snr_db=20):
+def add_noise(x, snr_db=1):
     """Add Gaussian noise at a given SNR (in dB)."""
     signal_power = np.mean(np.abs(x)**2)
     snr_linear = 10**(snr_db/10)
     noise_power = signal_power / snr_linear
-    noise = np.random.normal(0, np.sqrt(noise_power), size=x.shape)
+    noise = np.random.normal(0, noise_power, size=x.shape)
     return x + noise
 
-def add_missing_values(x, missing_rate=0.1, block=False, block_size=100):
+def add_missing_values(x, missing_rate=0.2, block=False, block_size=100):
     """Replace values with 0 to simulate missing data."""
     x_missing = x.copy()
     n = len(x)
@@ -51,7 +51,7 @@ def select_columns(df, num_cols=200, cp_cols=100, kt_cols=100):
     return cp_selected + kt_selected + other_selected
 
 def process_column(df: pd.DataFrame, col_name: str, file_name: str,
-                   snr_db=20, missing_rate=0.1, block=False):
+                   snr_db=1, missing_rate=0.2, block=False):
     t = df["time"].values
     x = df[col_name].values
 
