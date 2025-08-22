@@ -10,14 +10,14 @@ def process_combination(s0, b0, omega_g, zeta_g, time, freq):
     w_kt = np.zeros((len(time), len(time)))
     
     for i in range(w_cp.shape[0]):
-        w_cp[i,:] = simulate_process(time, s0, max(freq)/2, omega_g, zeta_g, b0)
+        w_cp[i,:] = simulate_process(time, s0, max(freq), omega_g, zeta_g, b0)
         w_kt[i,:] = simulate_process(time, s0, omega_g, omega_g, zeta_g, b0, eps_type='kt')
     
     w_cp_df = pd.DataFrame(w_cp.T).add_prefix('cp_')
     w_kt_df = pd.DataFrame(w_kt.T).add_prefix('kt_')
     df_results = pd.concat([w_cp_df, w_kt_df], axis=1)
     df_results['time'] = time
-    df_results.to_csv(f'data/realizations/stochastic_process_{s0}_{b0}_{omega_g}_{zeta_g}_freq_cp_{max(freq)/2}_freq_kt_{omega_g}.csv', index=False)
+    df_results.to_csv(f'data/realizations/stochastic_process_{s0}_{b0}_{omega_g}_{zeta_g}_freq_cp_{max(freq)}_freq_kt_{omega_g}.csv', index=False)
 
 time = np.linspace(0, 20, 512)
 freq = np.linspace(0, 50, 2)
