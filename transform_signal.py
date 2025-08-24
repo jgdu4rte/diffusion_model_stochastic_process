@@ -7,7 +7,7 @@ from wavelet.get_band_options import ghw_band_options
 from wavelet.ghw_transform import ghw_transform
 from tqdm import tqdm
 
-def add_noise(x, snr_db=1):
+def add_noise(x, snr_db=10):
     """Add Gaussian noise at a given SNR (in dB)."""
     signal_power = np.mean(np.abs(x)**2)
     snr_linear = 10**(snr_db/10)
@@ -15,20 +15,30 @@ def add_noise(x, snr_db=1):
     noise = np.random.normal(0, noise_power, size=x.shape)
     return x + noise
 
-def add_missing_values(x, missing_rate=0.2, block=False, block_size=100):
-    """Replace values with 0 to simulate missing data."""
+import numpy as np
+
+def add_missing_values(x, missing_rate=0.2, block=False, block_size=25):
+    """
+    Replace values with random numbers between 0 and max(x) 
+    to simulate missing data across the entire signal.
+    """
     x_missing = x.copy()
     n = len(x)
+    x_max = np.max(x)
+
     if block:
         # Drop contiguous chunks
         n_blocks = int(missing_rate * n / block_size)
         for _ in range(n_blocks):
-            start = np.random.randint(0, n - block_size)
-            x_missing[start:start+block_size] = 0
+            start = np.random.randint(0, n - block_size + 1)
+            x_missing[start:start+block_size] = np.random.uniform(
+                0, x_max, size=block_size
+            )
     else:
         # Drop random points
         mask = np.random.rand(n) < missing_rate
         x_missing[mask] = 0
+
     return x_missing
 
 def get_files_in_directory(directory_path, num_files=100):
@@ -50,8 +60,7 @@ def select_columns(df, num_cols=200, cp_cols=100, kt_cols=100):
     
     return cp_selected + kt_selected + other_selected
 
-def process_column(df: pd.DataFrame, col_name: str, file_name: str,
-                   snr_db=1, missing_rate=0.2, block=False):
+def process_column(df: pd.DataFrame, col_name: str, file_name: str, snr_db=10, missing_rate=0.2, block=False):
     t = df["time"].values
     x = df[col_name].values
 
@@ -62,7 +71,7 @@ def process_column(df: pd.DataFrame, col_name: str, file_name: str,
     uniform_bands, _, _ = ghw_band_options(x, fs, bins_per_band=4, spike_prominence=1e-1)
 
     # Helper to run GHW and save
-    def run_and_save(signal, suffix, snr_db=None, missing_rate=None, block=None):
+    def run_and_save(signal, suffix, snr_db=None, missing_rate=None, block=False):
         out_uniform = ghw_transform(signal, fs, uniform_bands, analytic=True, return_downsampled=False)
         coeffs = out_uniform["complex"]
         bands = out_uniform["bands"]
@@ -109,7 +118,7 @@ def process_file(file_path):
     for col in selected_columns:
         process_column(df, col, file_name)
 
-files_list = get_files_in_directory('data/realizations/', num_files=101)
+files_list = get_files_in_directory('data/realizations/', num_files=151)
 
 print(f'{len(files_list)} files to process...')
 
