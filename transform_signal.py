@@ -7,6 +7,25 @@ from wavelet.get_band_options import ghw_band_options
 from wavelet.ghw_transform import ghw_transform
 from tqdm import tqdm
 
+def add_missing_values(x, missing_rate=0.2, block=False, block_size=25):
+    x_missing = x.copy()
+    n = len(x)
+    x_max = np.max(x)
+    mask_time = np.zeros(n, dtype=bool)  # <-- record which time indices are dropped
+
+    if block:
+        n_blocks = int(missing_rate * n / block_size)
+        for _ in range(n_blocks):
+            start = np.random.randint(0, n - block_size + 1)
+            end = start + block_size
+            x_missing[start:end] = np.random.uniform(0, x_max, size=block_size)
+            mask_time[start:end] = True
+    else:
+        mask_time = (np.random.rand(n) < missing_rate)
+        x_missing[mask_time] = 0
+
+    return x_missing, mask_time
+
 def add_noise(x, snr_db=10):
     """Add Gaussian noise at a given SNR (in dB)."""
     signal_power = np.mean(np.abs(x)**2)
@@ -14,32 +33,6 @@ def add_noise(x, snr_db=10):
     noise_power = signal_power / snr_linear
     noise = np.random.normal(0, noise_power, size=x.shape)
     return x + noise
-
-import numpy as np
-
-def add_missing_values(x, missing_rate=0.2, block=False, block_size=25):
-    """
-    Replace values with random numbers between 0 and max(x) 
-    to simulate missing data across the entire signal.
-    """
-    x_missing = x.copy()
-    n = len(x)
-    x_max = np.max(x)
-
-    if block:
-        # Drop contiguous chunks
-        n_blocks = int(missing_rate * n / block_size)
-        for _ in range(n_blocks):
-            start = np.random.randint(0, n - block_size + 1)
-            x_missing[start:start+block_size] = np.random.uniform(
-                0, x_max, size=block_size
-            )
-    else:
-        # Drop random points
-        mask = np.random.rand(n) < missing_rate
-        x_missing[mask] = 0
-
-    return x_missing
 
 def get_files_in_directory(directory_path, num_files=100):
     all_files = [os.path.join(directory_path, f) for f in os.listdir(directory_path) 
@@ -70,10 +63,12 @@ def process_column(df: pd.DataFrame, col_name: str, file_name: str, snr_db=10, m
     # Bands
     uniform_bands, _, _ = ghw_band_options(x, fs, bins_per_band=4, spike_prominence=1e-1)
 
-    # Helper to run GHW and save
-    def run_and_save(signal, suffix, snr_db=None, missing_rate=None, block=False):
+    x_noisy = add_noise(x, snr_db=snr_db)
+    x_missing, mask_time = add_missing_values(x_noisy, missing_rate=missing_rate, block=block)
+
+    def run_and_save(signal, suffix, snr_db=None, missing_rate=None, block=False, mask_time=None):
         out_uniform = ghw_transform(signal, fs, uniform_bands, analytic=True, return_downsampled=False)
-        coeffs = out_uniform["complex"]
+        coeffs = out_uniform["complex"]          # list of bands -> shape (H, W)
         bands = out_uniform["bands"]
         freq_centers = np.array([(b[0]+b[1])/2 for b in bands], dtype='float32')
 
@@ -92,6 +87,8 @@ def process_column(df: pd.DataFrame, col_name: str, file_name: str, snr_db=10, m
         df_result.attrs["snr_db"] = snr_db
         df_result.attrs["missing_rate"] = missing_rate
         df_result.attrs["block_dropout"] = block
+        if mask_time is not None:
+            df_result.attrs["mask_time"] = mask_time.astype(np.uint8)  # save as bytes
 
         output_file = f'data/transformations/{file_name}_{col_name}{suffix}.pkl'
         df_result.to_pickle(output_file)
@@ -99,10 +96,8 @@ def process_column(df: pd.DataFrame, col_name: str, file_name: str, snr_db=10, m
     # Original
     run_and_save(x, "")
 
-    # Noisy + missing
-    x_noisy = add_noise(x, snr_db=snr_db)
-    x_missing = add_missing_values(x_noisy, missing_rate=missing_rate, block=block)
-    run_and_save(x_missing, "_missing", missing_rate=missing_rate, block=block)
+    # Noisy + missing (now includes mask_time in attrs)
+    run_and_save(x_missing, "_missing", missing_rate=missing_rate, block=block, mask_time=mask_time)
 
 def process_file(file_path):
     file_name = os.path.basename(file_path).split('.csv')[0]
