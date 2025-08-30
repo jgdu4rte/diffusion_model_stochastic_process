@@ -99,13 +99,10 @@ def process_column(df: pd.DataFrame, col_name: str, file_name: str, snr_db=10, m
     # Original
     run_and_save(x, "")
 
-    # # Noisy
-    # x_noisy = add_noise(x, snr_db=snr_db)
-    # run_and_save(x_noisy, "_noisy", snr_db=snr_db)
-
-    # # Missing
-    # x_missing = add_missing_values(x, missing_rate=missing_rate, block=block)
-    # run_and_save(x_missing, "_missing", missing_rate=missing_rate, block=block)
+    # Noisy + missing
+    x_noisy = add_noise(x, snr_db=snr_db)
+    x_missing = add_missing_values(x_noisy, missing_rate=missing_rate, block=block)
+    run_and_save(x_missing, "_missing", missing_rate=missing_rate, block=block)
 
 def process_file(file_path):
     file_name = os.path.basename(file_path).split('.csv')[0]
@@ -118,7 +115,7 @@ def process_file(file_path):
     for col in selected_columns:
         process_column(df, col, file_name)
 
-files_list = get_files_in_directory('data/realizations/', num_files=200)
+files_list = get_files_in_directory('data/realizations/', num_files=300)
 print(f'{len(files_list)} files to process...')
 
 if not os.path.exists('data/transformations'):
